@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  fullName  String?
+  avatarUrl String?
+  bio       String?
+  country   String?
+  language  String?
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Online status
+  isOnline    Boolean  @default(false)
+  lastSeenAt  DateTime @default(now())
+
+  // Google OAuth fields
+  googleId    String? @unique
+  googleEmail String?
+  googleName  String?
+  googleImage String?
+
+  // Relationships
+  createdRooms     ChatRoom[]        @relation("RoomCreator")
+  roomParticipants RoomParticipant[]
+  sentMessages     Message[]         @relation("MessageSender")
+  sentPrivateMessages     PrivateMessage[] @relation("PrivateMessageSender")
+  receivedPrivateMessages PrivateMessage[] @relation("PrivateMessageReceiver")
+  
+  // Friendships
+  sentFriendRequests     Friendship[] @relation("FriendshipRequester")
+  receivedFriendRequests Friendship[] @relation("FriendshipReceiver")
+  
+  // Sessions
+  sessions UserSession[]
+
+  @@map("users")
+}
+
+model ChatRoom {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  isPrivate       Boolean  @default(false)
+  maxParticipants Int      @default(50)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  createdBy       User?            @relation("RoomCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById     String?
+  participants    RoomParticipant[]
+  messages        Message[]
+
+  @@map("chat_rooms")
+}
+
+model RoomParticipant {
+  id       String   @id @default(cuid())
+  role     String   @default("member") // "admin", "moderator", "member"
+  joinedAt DateTime @default(now())
+
+  // Relationships
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([roomId, userId])
+  @@map("room_participants")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  messageType String   @default("text") // "text", "image", "file", "voice"
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId String
+  sender User?    @relation("MessageSender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId String?
+
+  @@map("messages")
+}
+
+model PrivateMessage {
+  id          String   @id @default(cuid())
+  content     String
+  messageType String   @default("text") // "text", "image", "file", "voice"
+  fileUrl     String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  sender   User @relation("PrivateMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String
+  receiver User @relation("PrivateMessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String
+
+  @@map("private_messages")
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  status    String   @default("pending") // "pending", "accepted", "blocked"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  requester   User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  receiver    User @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId  String
+
+  @@unique([requesterId, receiverId])
+  @@map("friendships")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@map("user_sessions")
+}
