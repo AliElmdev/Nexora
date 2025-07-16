@@ -1,0 +1,33 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: docker build -t myapp:latest .
+
+    - name: Run Docker container
+      run: |
+        docker run -d --name myapp -p 3000:3000 myapp:latest
+        sleep 10 # Wait for the app to start
+
+    - name: Health check
+      run: |
+        curl --fail http://localhost:3000 || (docker logs myapp && exit 1)
+
+    - name: Stop Docker container
+      run: docker stop myapp 
