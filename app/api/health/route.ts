@@ -7,7 +7,7 @@ export async function GET() {
       { 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
-        service: 'cultural-chat-app'
+        service: 'Nexora'
       },
       { status: 200 }
     )

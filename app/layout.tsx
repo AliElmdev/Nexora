@@ -10,11 +10,11 @@ import { SessionProvider } from "next-auth/react"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Cultural Exchange Chat - Learn Languages & Share Cultures",
+  title: "Nexora - Learn Languages & Share Cultures",
   description:
-    "Join topic-based chat rooms to practice languages, explore cultures, and learn together with people from around the world.",
-  keywords: "language exchange, cultural exchange, chat rooms, learning, education, multilingual",
-    generator: 'v0.dev'
+    "Join topic-based chat rooms on Nexora to practice languages, explore cultures, and learn together with people from around the world.",
+  keywords: "language exchange, cultural exchange, chat rooms, learning, education, multilingual, Nexora",
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
